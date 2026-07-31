@@ -54,17 +54,23 @@ export class QuietMeasurement {
     this.startedAtIso = new Date(this.startedAtMs).toISOString();
   }
 
-  /** Feed raw normalised (-1..1) PCM. The level is computed here. */
-  pushFrame(samples: Float32Array, sampleRate: number): void {
+  /**
+   * Feed raw normalised (-1..1) PCM. The level is computed here.
+   * Returns that level in dBFS, so a live readout does not have to recompute it.
+   */
+  pushFrame(samples: Float32Array, sampleRate: number): number {
     this.sawFrames = true;
     this.sampleRateHz = sampleRate;
-    this.levels.push(frameDbfs(samples));
+    const level = frameDbfs(samples);
+    this.levels.push(level);
+    return level;
   }
 
-  /** Feed a dBFS level the platform already computed. */
-  pushLevel(dbfs: number): void {
+  /** Feed a dBFS level the platform already computed. Returns it unchanged, for symmetry. */
+  pushLevel(dbfs: number): number {
     this.sawPlatformLevels = true;
     this.levels.push(dbfs);
+    return dbfs;
   }
 
   get sampleCount(): number {
